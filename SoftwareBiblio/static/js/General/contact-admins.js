@@ -1,0 +1,1 @@
+var Contact=function(){return{init:function(){var n;$(document).ready(function(){n=new GMaps({div:"#gmapbg",lat:8.538913,lng:-83.306842});var t=n.addMarker({lat:8.538913,lng:-83.306842,title:"Loop, Inc.",infoWindow:{content:"<b>Bibioteca de Puerto Jiménez</b> Península de Osa<br>Puerto Jiménez"}});t.infoWindow.open(n,t)})}}}();jQuery(document).ready(function(){Contact.init()});

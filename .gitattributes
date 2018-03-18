@@ -1,0 +1,5 @@
+* linguist-vendored
+*.py linguist-vendored=false
+*.settings.py filter=gitignore
+git config --global filter.gitignore.clean "EMAIL_HOST_PASSWORD = '/#gitignore$/'d"
+git config --globalv

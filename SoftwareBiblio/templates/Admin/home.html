@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{% block content %}
+	{% if user.is_authenticated %}
+        <meta http-equiv="refresh" content="0; url='chose_login'" />
+	{% else %}
+        <meta http-equiv="refresh" content="0; url='login'" />
+	{% endif %}
+{% endblock content %}
+</body>
+</html>
+

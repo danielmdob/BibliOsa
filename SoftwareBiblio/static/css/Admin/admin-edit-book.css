@@ -1,0 +1,133 @@
+/* Cubic Bezier Transition */
+/***
+Invoice page 2
+***/
+
+#media-div {
+  height: 1070px;
+}
+
+#comments-div {
+  min-height: 100px;
+}
+
+
+.invoice-content-2 {
+  background-color: #fff;
+  padding: 80px 70px; }
+  .invoice-content-2.bordered {
+    border: 1px solid;
+    border-color: #e7ecf1; }
+  .invoice-content-2 .invoice-head {
+    margin-bottom: 50px; }
+    .invoice-content-2 .invoice-head .invoice-logo {
+      text-align: center; }
+      .invoice-content-2 .invoice-head .invoice-logo > img {
+        float: left;
+        margin-right: 45px; }
+      .invoice-content-2 .invoice-head .invoice-logo > h1 {
+        float: left;
+        font-size: 17px;
+        font-weight: 700;
+        color: #39424a;
+        margin-top: 48px; }
+    .invoice-content-2 .invoice-head .company-address {
+      text-align: right;
+      font-size: 14px;
+      color: #7e8691; }
+  .invoice-content-2 .invoice-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: #9ea8b7; }
+  .invoice-content-2 .invoice-desc {
+    font-size: 14px;
+    color: #4e5a64;
+    font-weight: 600; }
+    .invoice-content-2 .invoice-desc.inv-address {
+      font-size: 13px;
+      color: #7e8691;
+      font-weight: 400; }
+    .invoice-content-2 .invoice-desc.grand-total {
+      font-size: 16px;
+      font-weight: 700; }
+  .invoice-content-2 .invoice-cust-add {
+    margin-bottom: 50px; }
+  .invoice-content-2 .invoice-body .text-center {
+    text-align: center; }
+  .invoice-content-2 .invoice-body tr:last-child {
+    border-bottom: 1px solid #e7ecf1; }
+  .invoice-content-2 .invoice-body th, .invoice-content-2 .invoice-body td {
+    vertical-align: middle;
+    padding-left: 40px;
+    padding-right: 40px; }
+    .invoice-content-2 .invoice-body th:first-child, .invoice-content-2 .invoice-body td:first-child {
+      padding-left: 0; }
+    .invoice-content-2 .invoice-body th:last-child, .invoice-content-2 .invoice-body td:last-child {
+      padding-right: 0; }
+  .invoice-content-2 .invoice-body h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4e5a64;
+    margin-bottom: 0; }
+  .invoice-content-2 .invoice-body p {
+    font-size: 13px;
+    color: #7e8691; }
+  .invoice-content-2 .print-btn {
+    float: right;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px; }
+
+@media (max-width: 1024px) {
+  .invoice-content-2 .invoice-head .invoice-logo > img {
+    width: 130px;
+    margin-top: 26px; } }
+
+@media (max-width: 991px) {
+  .invoice-content-2 {
+    padding: 40px 30px; } }
+
+@media (max-width: 480px) {
+  .invoice-content-2 .invoice-head .invoice-logo > h1 {
+    margin-top: 10px; }
+  .invoice-content-2 .invoice-head .company-address {
+    font-size: 12px; } }
+
+.image-container {
+  width:250px;
+  height: 500px;
+  float:left;
+  display: inline;
+}
+.image-container img {
+  width:250px;
+  height: 400px;
+}
+
+.chart-container{ 
+  display: inline;
+  float: right;
+}
+
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 20% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 25%; /* Could be more or less, depending on screen size */
+    height: 22%;
+}

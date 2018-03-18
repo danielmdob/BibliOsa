@@ -1,0 +1,1 @@
+var Contact=function(){return{init:function(){var n;$(document).ready(function(){n=new GMaps({div:"#gmapbg",lat:9.937870,lng:-84.051994});var t=n.addMarker({lat:9.937870,lng:-84.051994,title:"Loop, Inc.",infoWindow:{content:"<b>UCR</b> San José<br>Cantón de Montes de Oca"}});t.infoWindow.open(n,t)})}}}();jQuery(document).ready(function(){Contact.init()});
