@@ -206,21 +206,17 @@ License: You must have a valid license purchased only from themeforest(the above
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
+                                                                    {% for loan in loans %}
                                                                     <tr>
-                                                                        <td> 10-Marzo-2018 </td>
-                                                                        <td> La Odisea </td>
-                                                                        <td> Homero </td>
+                                                                        <td> {{ loan.0 }} </td>
+                                                                        {% for book in loan.1 %}
+                                                                            <td> <a href="{{ book.1 }}"> {{ book.0 }}  </a></td>
+                                                                        {% endfor %}
+                                                                        {% for author in loan.2 %}
+                                                                        <td> {{ author }} </td>
+                                                                        {% endfor %}
                                                                     </tr>
-                                                                    <tr>
-                                                                        <td>  11-Marzo-2018  </td>
-                                                                        <td> La Ilíada </td>
-                                                                        <td> Homero </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td> 15-Marzo-2018  </td>
-                                                                        <td> Única Mirando al Mar </td>
-                                                                        <td> Fernando Contreras </td>
-                                                                    </tr>
+                                                                {% endfor %}
                                                                 </tbody>
                                                             </table>
                                                         </div>

@@ -249,24 +249,18 @@ License: You must have a valid license purchased only from themeforest(the above
                                                                     </tr>
                                                                 </thead>
                                                                 <tbody>
+                                                                {% for loan in loans %}
                                                                     <tr>
-                                                                        <td> 10-Marzo-2018 </td>
-                                                                        <td> La Odisea </td>
-                                                                        <td> Homero </td>
-                                                                        <td> Luis Rojas </td>
+                                                                        <td> {{ loan.0 }} </td>
+                                                                        {% for book in loan.1 %}
+                                                                            <td> <a href="{{ book.1 }}"> {{ book.0 }}  </a></td>
+                                                                        {% endfor %}
+                                                                        {% for author in loan.2 %}
+                                                                        <td> {{ author }} </td>
+                                                                        {% endfor %}
+                                                                        <td> <a href="{{ loan.4 }}"> {{ loan.3 }} </a> </td>
                                                                     </tr>
-                                                                    <tr>
-                                                                        <td> 11-Marzo-2018 </td>
-                                                                        <td> La Ilíada </td>
-                                                                        <td> Homero </td>
-                                                                        <td> Andrea Villalobos </td>
-                                                                    </tr>
-                                                                    <tr>
-                                                                        <td> 15-Marzo-2018 </td>
-                                                                        <td> Única Mirando al Mar </td>
-                                                                        <td> Fernando Contreras </td>
-                                                                        <td> Carla Díaz </td>
-                                                                    </tr>
+                                                                {% endfor %}
                                                                 </tbody>
                                                             </table>
                                                         </div>

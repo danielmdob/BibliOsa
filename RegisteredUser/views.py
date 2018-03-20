@@ -4,8 +4,11 @@ from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User, Permission
-from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator
+from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator, Loan, Copy, Book
 from django.contrib.auth.views import login
+
+'''This file holds all the possible views for a reader user. There is a user validation, if its an admin
+the system must give a 403:Forbidden HTTP response, if not the system must render the template.'''
 
 
 def home(request):
@@ -19,7 +22,9 @@ def register(request):
 def permission_denied(request):
     return HttpResponseForbidden()
 
-
+# login dashboard view. It queries the DB for reader loans in return date order.
+# the following is the data structure sent to the template:
+# Loans([Loan_info([[return_date, Books([Book_info([title,href]),..]), Authors([normalized_name,..])]),..])
 @login_required
 def reader_dashboard(request):
     user = request.user
@@ -28,13 +33,49 @@ def reader_dashboard(request):
         admin = Administrator.objects.get(user=User.objects.get(email=email))
         return HttpResponseForbidden()
     except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-dashboard.html')
+        registered_user = RegisteredUser.objects.get(user=User.objects.get(email=email))
+        loan_set = Loan.objects.filter(reader_id=registered_user.id).order_by('return_date')
+        loans = []
+        loans_counter = 0
+        for loan in loan_set:
+            loan_info = []
+            return_date = loan.return_date
+            # print(return_date)
+            loan_info.insert(0, return_date)
+            loan_copy_set = Copy.objects.filter(loan_id=loan.id)
+            books = []
+            book_counter = 0
+            for copy in loan_copy_set:
+                book = Book.objects.filter(id=copy.book_id)
+                for b in book:
+                    book_title = b.title
+                    # print(book_title)
+                    book_href = "reader_book?id=" + str(b.id)
+                    # print(book_href)
+                    book_info = []
+                    book_info.insert(0, book_title)
+                    book_info.insert(1, book_href)
+                    books.insert(book_counter, book_info)
+                    authors = []
+                    author_set = b.authors.all()
+                    author_counter = 0
+                    for author in author_set:
+                        authors.insert(author_counter, author.normalized_name)
+                        author_counter += 1
+                        # print(authors)
+            loan_info.insert(1, books)
+            loan_info.insert(2, authors)
+            loans.insert(loans_counter, loan_info)
+            loans_counter += 1
+        print(loans)
+        return render(request, '../templates/RegisteredUser/reader-dashboard.html', {'loans': loans})
 
 
+# this view handles the authentication process, rendering the correct view for the user.
 def chose_login(request):
     logged_user = request.user
     email = logged_user.email
-    try: #este caso nunca va a pasar pero es necesario para no hacer 1000 de estas adentro
+    try:
         user = User.objects.get(email=email)
         try:
             admin = Administrator.objects.get(user=user)
@@ -61,7 +102,7 @@ def chose_login(request):
     except User.DoesNotExist:
         return HttpResponseRedirect('register')
 
-
+# register a new user
 def finish_register(request):
     cedula = request.GET.get('cedula', None)
     email = request.GET.get('email', None)
@@ -70,9 +111,7 @@ def finish_register(request):
     phone = request.GET.get('phone', None)
     # print("%s %s %s %s %s %s" % (fullname, cedula, email, address, city, phone))
     # hacer el registro a la base de datos
-    print(email)
     try:
-        print(email)
         user = UnregisteredUser.objects.get(email=email)
         dashboard = 1  # admin dashboard
         admin = Administrator(user=User.objects.get(email=email), cedula=cedula, address=address,

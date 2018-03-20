@@ -1,9 +1,6 @@
 from django.db import models
 from django import forms
 from django.contrib.auth.models import User
-from django.core.files import File
-import os
-import urllib.request
 
 
 # Create your models here.
@@ -17,19 +14,19 @@ class Image(models.Model):
 
 class ProfilePicture(Image):
     class Meta:
-        db_table = "profilePicture"
+        db_table = "profile_picture"
 
 
 class BookCover(Image):
     class Meta:
-        db_table = "bookCover"
+        db_table = "book_cover"
 
 
 class UnregisteredUser(models.Model):
     email = models.CharField(max_length=50, primary_key=True)
 
     class Meta:
-        db_table = 'unregisteredUser'
+        db_table = 'unregistered_user'
 
 
 class RegisteredUser(models.Model):
@@ -40,10 +37,10 @@ class RegisteredUser(models.Model):
     barcode = models.CharField(max_length=100)
     city = models.CharField(max_length=20)
     phone = models.CharField(max_length=20)
-    profilePicture = models.OneToOneField(ProfilePicture, on_delete=models.SET_NULL, null=True)
+    profile_picture = models.OneToOneField(ProfilePicture, on_delete=models.SET_NULL, null=True)
 
     class Meta:
-        db_table = 'registeredUser'
+        db_table = 'registered_user'
 
 
 class Administrator(RegisteredUser):
@@ -66,8 +63,8 @@ class Serie(models.Model):
 
 
 class Author(models.Model):
-    normalizedName = models.CharField(max_length=50)
-    fullName = models.CharField(max_length=60)
+    normalized_name = models.CharField(max_length=50)
+    full_name = models.CharField(max_length=60)
     nickname = models.CharField(max_length=20)
 
     class Meta:
@@ -82,16 +79,12 @@ class Book(models.Model):
     year = models.IntegerField()
     signature = models.CharField(max_length=50)
     publisher = models.CharField(max_length=40)
-    genre = models.CharField(max_length=20)
     genres = models.ManyToManyField(Genre)
     authors = models.ManyToManyField(Author)
     cover = models.OneToOneField(BookCover, on_delete=models.SET_NULL, null=True)
-    #  the next 3 were added for MARC21 standard
     cover_type = models.CharField(max_length=50)  # hardcover, etc
     edition = models.CharField(max_length=50)
     physical_description = models.CharField(max_length=100)
-
-
 
     class Meta:
         db_table = 'book'
@@ -107,12 +100,12 @@ class Review(models.Model):
 
 
 class Loan(models.Model):
-    loanDate = models.DateTimeField()
-    returnDate = models.DateTimeField()
-    feeTime = models.DateTimeField()
+    loan_date = models.DateTimeField()
+    return_date = models.DateTimeField()
+    fee_time = models.DateTimeField()
     fee = models.FloatField()
     admin = models.ForeignKey(Administrator, on_delete=models.SET_NULL, null=True, related_name='admin')
-    feePerBook = models.FloatField()
+    fee_per_book = models.FloatField()
     reader = models.ForeignKey(RegisteredUser, on_delete=models.SET_NULL, null=True, related_name='reader')
 
     class Meta:
@@ -120,7 +113,7 @@ class Loan(models.Model):
 
 
 class Copy(models.Model):
-    copyNumber = models.IntegerField()
+    copy_number = models.IntegerField()
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     loan = models.ForeignKey(Loan, on_delete=models.SET_NULL, null=True)
 

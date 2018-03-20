@@ -25,7 +25,7 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    # authentication urls
+    # authentication process urls
     path('admin/', admin.site.urls),
     url(r'^login/$', gviews.login, name='login'),
     url(r'^logout/$', gviews.logout, {'next_page': 'home'}),
@@ -69,7 +69,6 @@ urlpatterns = [
     url(r'^admin_save_book_cover/', aviews.admin_save_book_cover, name='admin_save_book_cover'),
 
     # reader urls
-
     url(r'^reader_dashboard', ruviews.reader_dashboard, name='reader_dashboard'),
     url(r'^reader_about', ruviews.reader_about, name='reader_about'),
     url(r'^reader_book', ruviews.reader_book, name='reader_book'),
@@ -86,6 +85,6 @@ urlpatterns = [
     url(r'^reader_genres', ruviews.reader_genres, name='reader_genres'),
 ]
 
-if settings.DEBUG:
+if settings.DEBUG: # settings to make static and media files work
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
