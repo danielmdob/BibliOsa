@@ -1,15 +1,22 @@
 from django.contrib.auth.decorators import login_required, user_passes_test, permission_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseBadRequest, HttpResponseNotFound
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.contrib.auth.models import User, Permission
+from django.views.decorators.csrf import csrf_exempt
+
 from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator, Loan, Copy, Book
 from django.contrib.auth.views import login
+from urllib.request import urlopen
+from RegisteredUser import utils
+from RegisteredUser.services import user_service, administrator_service
 
 '''This file holds all the possible views for a reader user. There is a user validation, if its an admin
 the system must give a 403:Forbidden HTTP response, if not the system must render the template.'''
 
+web_app_url = 'http://localhost:3000/'
 
 def home(request):
     return render(request, '../templates/Admin/home.html')
@@ -79,7 +86,7 @@ def chose_login(request):
         user = User.objects.get(email=email)
         try:
             admin = Administrator.objects.get(user=user)
-            return HttpResponseRedirect('admin_dashboard')
+            return HttpResponseRedirect(web_app_url)
         except Administrator.DoesNotExist:
             try:
                 unregisteredUser = UnregisteredUser.objects.get(email=email)
@@ -90,17 +97,18 @@ def chose_login(request):
                                           address=registeredUser.address, city=registeredUser.city,
                                           phone=registeredUser.phone)
                     admin.save()
-                    return HttpResponseRedirect('admin_dashboard')
+                    return HttpResponseRedirect(web_app_url)
                 except RegisteredUser.DoesNotExist:
                     return HttpResponseRedirect('register')
             except UnregisteredUser.DoesNotExist:
                 try:
                     registeredUser = RegisteredUser.objects.get(user=user)
-                    return HttpResponseRedirect('reader_dashboard')
+                    return HttpResponseRedirect(web_app_url)
                 except RegisteredUser.DoesNotExist:
                     return HttpResponseRedirect('register')
     except User.DoesNotExist:
         return HttpResponseRedirect('register')
+
 
 # register a new user
 def finish_register(request):
@@ -124,8 +132,18 @@ def finish_register(request):
                                          phone=phone)
         registered_user.save()
     data = {'dashboard': dashboard}
-    return JsonResponse(data)
+    return HttpResponse(status=200)
 
+
+def is_logged_in(request):
+    if request.user.is_authenticated:
+        return HttpResponse("true")
+    else:
+        return HttpResponse("false")
+
+
+def redirect_to_app(request):
+    return HttpResponseRedirect(web_app_url)
 
 @login_required
 def reader_about(request):
@@ -268,3 +286,52 @@ def reader_genres(request):
         return HttpResponseForbidden()
     except Administrator.DoesNotExist:
         return render(request, '../templates/RegisteredUser/reader-genres.html')
+
+
+@login_required
+def is_administrator(request):
+    user = request.user
+    email = user.email
+    try:
+        admin = Administrator.objects.get(user=User.objects.get(email=email))
+        return HttpResponse("true")
+    except Administrator.DoesNotExist:
+        return HttpResponse("false")
+
+
+@login_required
+def get_user_info(request):
+    user = request.user
+    user_info = {
+        'email' : user.email,
+        'firstName' : user.first_name,
+        'lastName' : user.last_name,
+    }
+    return JsonResponse(user_info)
+
+
+@csrf_exempt
+def invite_administrator(request):
+    invitee_email = request.POST.get('invitee_email')
+    if not invitee_email:
+        return HttpResponseBadRequest()
+
+    registered_user = user_service.get_user_by_email(invitee_email)
+    if not registered_user:
+        return HttpResponseNotFound()
+
+    if administrator_service.is_admin(invitee_email):
+        return HttpResponse(status=409)
+
+    registered_user.__class__ = Administrator
+    registered_user.registereduser_ptr=registered_user
+    registered_user.save()
+    return HttpResponse()
+"""
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    invitee_email = request.POST.get('invitee_email')
+    if not invitee_email:
+        return HttpResponseBadRequest()
+"""

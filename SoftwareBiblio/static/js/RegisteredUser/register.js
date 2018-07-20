@@ -100,17 +100,11 @@ function submitData(){
             'city': city,
             'phone': phone
         },
-        dataType: 'json',
-        success: function (data) {
-            json_response = data;
-          alert("Redireccionando...")
+        success: function (result) {
+        	alert('Redireccionando...')
         }
       }).done(function () {
-            if(json_response.dashboard == 0) {
-                window.location.href = 'reader_dashboard';
-            } else {
-                window.location.href = 'admin_dashboard';
-            }
+      	window.location.href = 'redirect_to_app';
     });
 }
 

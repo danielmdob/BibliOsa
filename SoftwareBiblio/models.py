@@ -55,6 +55,12 @@ class Genre(models.Model):
         db_table = 'genre'
 
 
+class Publisher(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'publisher'
+
 class Serie(models.Model):
     name = models.CharField(max_length=50)
 
@@ -63,9 +69,7 @@ class Serie(models.Model):
 
 
 class Author(models.Model):
-    normalized_name = models.CharField(max_length=50)
     full_name = models.CharField(max_length=60)
-    nickname = models.CharField(max_length=20)
 
     class Meta:
         db_table = 'author'

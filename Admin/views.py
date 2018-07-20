@@ -1,6 +1,7 @@
 from SoftwareBiblio.models import Book, Author, UnregisteredUser, RegisteredUser, Administrator, BookCover, Loan, Copy
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from SoftwareBiblio.forms import ImageForm
 from django.core.mail import EmailMessage
@@ -11,6 +12,7 @@ import isbnlib
 '''This file holds all the possible views for an administrator user. There is a user validation, if its an admin
 the system must render the template, of not gives a 403:Forbidden HTTP response.'''
 
+web_app_url = 'http://localhost:3000/'
 
 # This view saves a book cover, it could be used as well for profile pictures. Pictures are saved under /media/documents
 def admin_save_book_cover(request):
@@ -84,49 +86,7 @@ def admin_dashboard(request):
     email = user.email
     try:
         admin = Administrator.objects.get(user=User.objects.get(email=email))
-        loan_set = Loan.objects.all().order_by('return_date')
-        loans = []
-        loans_counter = 0
-        for loan in loan_set:
-            loan_info = []
-            return_date = loan.return_date
-            # print(return_date)
-            loan_info.insert(0, return_date)
-            loan_copy_set = Copy.objects.filter(loan_id=loan.id)
-            books = []
-            book_counter = 0
-            for copy in loan_copy_set:
-                book = Book.objects.filter(id=copy.book_id)
-                for b in book:
-                    book_title = b.title
-                    # print(book_title)
-                    book_href = "admin_book?id=" + str(b.id)
-                    # print(book_href)
-                    book_info = []
-                    book_info.insert(0, book_title)
-                    book_info.insert(1, book_href)
-                    books.insert(book_counter, book_info)
-                    authors = []
-                    author_set = b.authors.all()
-                    author_counter = 0
-                    for author in author_set:
-                        authors.insert(author_counter, author.normalized_name)
-                        author_counter += 1
-                        # print(authors)
-            loan_info.insert(1, books)
-            loan_info.insert(2, authors)
-            reader = RegisteredUser.objects.filter(id=loan.reader_id)
-            for r in reader: # even if its one user it was giving error, so I made a for for 1 element to solve it...
-                reader_name = r.user.first_name + " " + r.user.last_name
-                # print(reader_name)
-                reader_href = "admin_reader_profile?id=" + str(r.id)
-                # print(reader_href)
-                loan_info.insert(3, reader_name)
-                loan_info.insert(4, reader_href)
-            loans.insert(loans_counter, loan_info)
-            loans_counter += 1
-        print(loans)
-        return render(request, '../templates/Admin/admin-dashboard.html', {'loans': loans})
+        return HttpResponseRedirect(web_app_url)
     except Administrator.DoesNotExist:
         return HttpResponseForbidden()
 

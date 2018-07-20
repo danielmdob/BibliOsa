@@ -83,8 +83,15 @@ urlpatterns = [
     url(r'^reader_view_loans', ruviews.reader_view_loans, name='reader_view_loans'),
     url(r'^reader_books', ruviews.reader_books, name='reader_books'),
     url(r'^reader_genres', ruviews.reader_genres, name='reader_genres'),
+    url(r'^redirect_to_app', ruviews.redirect_to_app, name='redirect_to_app'),
+
+    # web services
+    url(r'^is_logged_in', ruviews.is_logged_in, name='is_logged_in'),
+    url(r'^is_administrator', ruviews.is_administrator, name='is_administrator'),
+    url(r'^get_user_info', ruviews.get_user_info, name='get_user_info'),
+    url(r'^invite_administrator', ruviews.invite_administrator, name='invite_administrator'),
 ]
 
-if settings.DEBUG: # settings to make static and media files work
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+#if settings.DEBUG: # settings to make static and media files work
+#    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+#    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
