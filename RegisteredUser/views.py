@@ -310,10 +310,18 @@ def get_user_info(request):
     return JsonResponse(user_info)
 
 
+@login_required
 @csrf_exempt
 def invite_administrator(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
     invitee_email = request.POST.get('invitee_email')
     if not invitee_email:
+        return HttpResponseBadRequest()
+
+    invitee_email = request.POST.get('invitee_email')
+    if not invitee_email or invitee_email == '':
         return HttpResponseBadRequest()
 
     registered_user = user_service.get_user_by_email(invitee_email)
@@ -321,17 +329,9 @@ def invite_administrator(request):
         return HttpResponseNotFound()
 
     if administrator_service.is_admin(invitee_email):
-        return HttpResponse(status=409)
+        return HttpResponse(status=409)  # 409 is the status code for conflict
 
     registered_user.__class__ = Administrator
     registered_user.registereduser_ptr=registered_user
     registered_user.save()
     return HttpResponse()
-"""
-    if not utils.validate_admin(request.user):
-        return HttpResponseForbidden()
-
-    invitee_email = request.POST.get('invitee_email')
-    if not invitee_email:
-        return HttpResponseBadRequest()
-"""
