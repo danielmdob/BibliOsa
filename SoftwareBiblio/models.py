@@ -17,11 +17,6 @@ class ProfilePicture(Image):
         db_table = "profile_picture"
 
 
-class BookCover(Image):
-    class Meta:
-        db_table = "book_cover"
-
-
 class UnregisteredUser(models.Model):
     email = models.CharField(max_length=50, primary_key=True)
 
@@ -77,18 +72,17 @@ class Author(models.Model):
 
 class Book(models.Model):
     title = models.CharField(max_length=100)
-    ISBN = models.CharField(max_length=20)
-    ISSN = models.CharField(max_length=20)
-    series = models.ForeignKey(Serie, on_delete=models.SET_NULL, null=True)
+    isbn10 = models.CharField(max_length=20)
+    isbn13 = models.CharField(max_length=20)
+    issn = models.CharField(max_length=20)
+    call_number = models.CharField(max_length=20, null=True)
     year = models.IntegerField()
-    signature = models.CharField(max_length=50)
     publisher = models.CharField(max_length=40)
-    genres = models.ManyToManyField(Genre)
+    genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
     authors = models.ManyToManyField(Author)
-    cover = models.OneToOneField(BookCover, on_delete=models.SET_NULL, null=True)
-    cover_type = models.CharField(max_length=50)  # hardcover, etc
+    cover = models.URLField()
     edition = models.CharField(max_length=50)
-    physical_description = models.CharField(max_length=100)
+    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = 'book'

@@ -41,10 +41,14 @@ urlpatterns = [
     url(r'^is_logged_in', ruviews.is_logged_in, name='is_logged_in'),
     url(r'^is_administrator', ruviews.is_administrator, name='is_administrator'),
     url(r'^get_user_info', ruviews.get_user_info, name='get_user_info'),
+    url(r'^get_categories', ruviews.get_categories, name='get_categories'),
 
     # admin web services
     url(r'^invite_administrator', ruviews.invite_administrator, name='invite_administrator'),
     url(r'^create_category', aviews.create_category, name='create_category'),
+    url(r'^delete_category', aviews.delete_category, name='delete_category'),
+    url(r'^edit_category', aviews.edit_category, name='edit_category'),
+    url(r'^add_book', aviews.add_book, name='add_book'),
 ]
 
 #if settings.DEBUG: # settings to make static and media files work

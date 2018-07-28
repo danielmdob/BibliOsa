@@ -7,11 +7,12 @@ from django.shortcuts import render
 from django.contrib.auth.models import User, Permission
 from django.views.decorators.csrf import csrf_exempt
 
-from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator, Loan, Copy, Book
+from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator, Loan, Copy, Book, Genre
 from django.contrib.auth.views import login
 from urllib.request import urlopen
 from RegisteredUser import utils
 from RegisteredUser.services import user_service, administrator_service
+from RegisteredUser.serializers import category_serializer
 
 '''This file holds all the possible views for a reader user. There is a user validation, if its an admin
 the system must give a 403:Forbidden HTTP response, if not the system must render the template.'''
@@ -41,41 +42,8 @@ def reader_dashboard(request):
         return HttpResponseForbidden()
     except Administrator.DoesNotExist:
         registered_user = RegisteredUser.objects.get(user=User.objects.get(email=email))
-        loan_set = Loan.objects.filter(reader_id=registered_user.id).order_by('return_date')
-        loans = []
-        loans_counter = 0
-        for loan in loan_set:
-            loan_info = []
-            return_date = loan.return_date
-            # print(return_date)
-            loan_info.insert(0, return_date)
-            loan_copy_set = Copy.objects.filter(loan_id=loan.id)
-            books = []
-            book_counter = 0
-            for copy in loan_copy_set:
-                book = Book.objects.filter(id=copy.book_id)
-                for b in book:
-                    book_title = b.title
-                    # print(book_title)
-                    book_href = "reader_book?id=" + str(b.id)
-                    # print(book_href)
-                    book_info = []
-                    book_info.insert(0, book_title)
-                    book_info.insert(1, book_href)
-                    books.insert(book_counter, book_info)
-                    authors = []
-                    author_set = b.authors.all()
-                    author_counter = 0
-                    for author in author_set:
-                        authors.insert(author_counter, author.normalized_name)
-                        author_counter += 1
-                        # print(authors)
-            loan_info.insert(1, books)
-            loan_info.insert(2, authors)
-            loans.insert(loans_counter, loan_info)
-            loans_counter += 1
-        print(loans)
-        return render(request, '../templates/RegisteredUser/reader-dashboard.html', {'loans': loans})
+
+        return render(request, '../templates/RegisteredUser/reader-dashboard.html', {'loans': 1})
 
 
 # this view handles the authentication process, rendering the correct view for the user.
@@ -190,105 +158,6 @@ def reader_contact_developers(request):
 
 
 @login_required
-def reader_edit_my_profile(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-editMyProfile.html')
-
-
-@login_required
-def reader_genre(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-genre.html')
-
-
-@login_required
-def reader_loan_page(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-loanPage.html')
-
-
-@login_required
-def reader_my_profile(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-myProfile.html')
-
-
-@login_required
-def reader_search_results(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-searchResults.html')
-
-
-@login_required
-def reader_terms_of_use(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-termsOfUse.html')
-
-
-@login_required
-def reader_view_loans(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-viewLoans.html')
-
-
-@login_required
-def reader_books(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-books.html')
-
-
-@login_required
-def reader_genres(request):
-    user = request.user
-    email = user.email
-    try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
-        return HttpResponseForbidden()
-    except Administrator.DoesNotExist:
-        return render(request, '../templates/RegisteredUser/reader-genres.html')
-
-
-@login_required
 def is_administrator(request):
     user = request.user
     email = user.email
@@ -335,3 +204,9 @@ def invite_administrator(request):
     registered_user.registereduser_ptr=registered_user
     registered_user.save()
     return HttpResponse()
+
+
+def get_categories(request):
+    categories = Genre.objects.all()
+    serialized_categories = category_serializer.get_categories(categories)
+    return JsonResponse(serialized_categories, safe=False)

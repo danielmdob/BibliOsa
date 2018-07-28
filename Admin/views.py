@@ -1,17 +1,16 @@
 from pip._vendor.distro import name
 
-from SoftwareBiblio.models import Book, Author, UnregisteredUser, Administrator, BookCover, Genre
+from SoftwareBiblio.models import Book, Author, UnregisteredUser, Administrator, Genre
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, HttpResponse, HttpResponseBadRequest
+from django.http import HttpResponseForbidden, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
-from SoftwareBiblio.forms import ImageForm
-from django.core.mail import EmailMessage
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from RegisteredUser import utils
-from Admin.services import category_service
+from Admin.services import category_service, book_service
+from RegisteredUser.serializers import book_serializer
 
 import isbnlib
 
@@ -120,6 +119,88 @@ def create_category(request):
 
     category = Genre(name=category_name)
     category.save()
+    return HttpResponse()
+
+
+@login_required
+@csrf_exempt
+def delete_category(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    category_id = request.POST.get('id')
+
+    if not category_id or category_id == '':
+        return HttpResponseBadRequest()
+
+    try:
+        category = Genre.objects.get(id=category_id)
+        category.delete()
+        return HttpResponse()
+    except Genre.DoesNotExist:
+        return HttpResponseNotFound()
+
+
+@login_required
+@csrf_exempt
+def edit_category(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    category_id = request.POST.get('id')
+    new_name = request.POST.get('name')
+
+    if not category_id or category_id == '' or not new_name or new_name == '':
+        return HttpResponseBadRequest()
+
+    if category_service.category_already_exists(new_name):
+        return HttpResponse(status=409)
+
+    try:
+        category = Genre.objects.get(id=category_id)
+        category.name = new_name
+        category.save()
+        return HttpResponse()
+    except Genre.DoesNotExist:
+        return HttpResponseNotFound()
+
+
+@login_required
+@csrf_exempt
+def add_book(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    title = request.POST.get('title')
+    authors = request.POST.getlist("authors")  # it may be authors[]
+    isbn10 = request.POST.get('isbn10')
+    isbn13 = request.POST.get('isbn13')
+    issn = request.POST.get('issn')
+    call_number = request.POST.get('call_number')
+    publisher = request.POST.get('publisher')
+    edition = request.POST.get('edition')
+    year = request.POST.get('year')
+    copies = request.POST.get('copies')
+    book_cover_url = request.POST.get('book_cover_url')
+
+    if not title or title == '' or not copies or copies == '':
+        return HttpResponseBadRequest()
+
+    preexisting_book = book_service.get_book_by_isbn10(isbn10)
+    if preexisting_book is not None:
+        return JsonResponse(book_serializer.get_book_add_error_serializer(preexisting_book, 'isbn10'), status=409)
+
+    preexisting_book = book_service.get_book_by_isbn13(isbn13)
+    if preexisting_book is not None:
+        return JsonResponse(book_serializer.get_book_add_error_serializer(preexisting_book, 'isbn13'), status=409)
+
+    preexisting_book = book_service.get_book_by_call_number(call_number)
+    if preexisting_book is not None:
+        return JsonResponse(book_serializer.get_book_add_error_serializer(preexisting_book, 'call_number'), status=409)
+
+    book = Book(title=title, isbn10=isbn10, isbn13=isbn13, issn=issn, call_number=call_number, publisher=publisher,
+                edition= edition, year=year, copies=copies, cover=book_cover_url)
+
     return HttpResponse()
 
 '''def addBookCover(url, book):
