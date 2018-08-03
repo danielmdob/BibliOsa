@@ -72,17 +72,18 @@ class Author(models.Model):
 
 class Book(models.Model):
     title = models.CharField(max_length=100)
-    isbn10 = models.CharField(max_length=20)
-    isbn13 = models.CharField(max_length=20)
-    issn = models.CharField(max_length=20)
+    isbn10 = models.CharField(max_length=20, null=True)
+    isbn13 = models.CharField(max_length=20, null=True)
+    issn = models.CharField(max_length=20, null=True)
     call_number = models.CharField(max_length=20, null=True)
-    year = models.IntegerField()
-    publisher = models.CharField(max_length=40)
+    year = models.IntegerField(null=True)
+    publisher = models.CharField(max_length=40, null=True)
     genre = models.ForeignKey(Genre, on_delete=models.SET_NULL, null=True)
     authors = models.ManyToManyField(Author)
     cover = models.URLField()
-    edition = models.CharField(max_length=50)
-    created = models.DateTimeField(auto_now_add=True)
+    edition = models.CharField(max_length=50, null=True)
+    created = models.DateTimeField(auto_now_add=True, null=True)
+    copies = models.IntegerField()
 
     class Meta:
         db_table = 'book'

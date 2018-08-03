@@ -12,7 +12,7 @@ from django.contrib.auth.views import login
 from urllib.request import urlopen
 from RegisteredUser import utils
 from RegisteredUser.services import user_service, administrator_service
-from RegisteredUser.serializers import category_serializer
+from RegisteredUser.serializers import category_serializer, book_serializer
 
 '''This file holds all the possible views for a reader user. There is a user validation, if its an admin
 the system must give a 403:Forbidden HTTP response, if not the system must render the template.'''
@@ -210,3 +210,19 @@ def get_categories(request):
     categories = Genre.objects.all()
     serialized_categories = category_serializer.get_categories(categories)
     return JsonResponse(serialized_categories, safe=False)
+
+
+def get_book_info(request):
+    book_id = request.GET.get('id')
+
+    if not book_id or book_id == '':
+        return HttpResponseBadRequest()
+
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return HttpResponseNotFound()
+
+    serialized_book = book_serializer.get_basic_book_serializer(book)
+
+    return JsonResponse(serialized_book, safe=False)

@@ -42,6 +42,7 @@ urlpatterns = [
     url(r'^is_administrator', ruviews.is_administrator, name='is_administrator'),
     url(r'^get_user_info', ruviews.get_user_info, name='get_user_info'),
     url(r'^get_categories', ruviews.get_categories, name='get_categories'),
+    url(r'^get_book', ruviews.get_book_info, name='get_book'),
 
     # admin web services
     url(r'^invite_administrator', ruviews.invite_administrator, name='invite_administrator'),
