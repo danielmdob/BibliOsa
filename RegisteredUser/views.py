@@ -7,12 +7,12 @@ from django.shortcuts import render
 from django.contrib.auth.models import User, Permission
 from django.views.decorators.csrf import csrf_exempt
 
-from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator, Loan, Copy, Book, Genre
+from SoftwareBiblio.models import UnregisteredUser, RegisteredUser, Administrator, Loan, Copy, Book, Genre, Author
 from django.contrib.auth.views import login
 from urllib.request import urlopen
 from RegisteredUser import utils
 from RegisteredUser.services import user_service, administrator_service
-from RegisteredUser.serializers import category_serializer, book_serializer
+from RegisteredUser.serializers import category_serializer, book_serializer, author_serializer
 
 '''This file holds all the possible views for a reader user. There is a user validation, if its an admin
 the system must give a 403:Forbidden HTTP response, if not the system must render the template.'''
@@ -215,7 +215,7 @@ def get_categories(request):
 def get_book_info(request):
     book_id = request.GET.get('id')
 
-    if not book_id or book_id == '':
+    if not book_id or book_id == '' or not book_id.isdigit():
         return HttpResponseBadRequest()
 
     try:
@@ -226,3 +226,45 @@ def get_book_info(request):
     serialized_book = book_serializer.get_basic_book_serializer(book)
 
     return JsonResponse(serialized_book, safe=False)
+
+
+def title_search_book(request):
+    search_string = request.GET.get('search_string')
+
+    if not search_string or search_string == '':
+        return HttpResponseBadRequest()
+
+    found_books = Book.objects.filter(title__icontains=search_string)
+    return JsonResponse(book_serializer.search_serializer(found_books), safe=False)
+
+
+def author_search(request):
+    search_string = request.GET.get('search_string')
+
+    if not search_string or search_string == '':
+        return HttpResponseBadRequest()
+
+    found_authors = Author.objects.filter(full_name__icontains=search_string)
+    return JsonResponse(author_serializer.search_serializer(found_authors), safe=False)
+
+
+def get_author_info(request):
+    author_id = request.GET.get('id')
+
+    if not author_id or author_id == '':
+        return HttpResponseBadRequest()
+
+    try:
+        author = Author.objects.get(id=author_id)
+    except Author.DoesNotExist:
+        return HttpResponseNotFound()
+
+    serialized_author = author_serializer.serialize_author(author)
+
+    return JsonResponse(serialized_author, safe=False)
+
+
+def get_new_arrivals(request):
+    books = Book.objects.filter(created__isnull=False).order_by('-created')[:5]
+    serialized_books = book_serializer.serialize_new_arrivals(books)
+    return JsonResponse(serialized_books, safe=False)

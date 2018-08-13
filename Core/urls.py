@@ -43,6 +43,11 @@ urlpatterns = [
     url(r'^get_user_info', ruviews.get_user_info, name='get_user_info'),
     url(r'^get_categories', ruviews.get_categories, name='get_categories'),
     url(r'^get_book', ruviews.get_book_info, name='get_book'),
+    url(r'^title_search_book', ruviews.title_search_book, name='title_search_book'),
+    url(r'^get_book', ruviews.get_book_info, name='get_book'),
+    url(r'^get_author', ruviews.get_author_info, name='get_author'),
+    url(r'^author_search', ruviews.author_search, name='author_search'),
+    url(r'^new_arrivals', ruviews.get_new_arrivals, name='new_arrivals'),
 
     # admin web services
     url(r'^invite_administrator', ruviews.invite_administrator, name='invite_administrator'),
@@ -50,6 +55,8 @@ urlpatterns = [
     url(r'^delete_category', aviews.delete_category, name='delete_category'),
     url(r'^edit_category', aviews.edit_category, name='edit_category'),
     url(r'^add_book', aviews.add_book, name='add_book'),
+    url(r'^edit_book', aviews.edit_book, name='edit_book'),
+    url(r'^delete_book', aviews.delete_book, name='delete_book'),
 ]
 
 #if settings.DEBUG: # settings to make static and media files work

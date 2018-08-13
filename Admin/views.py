@@ -180,7 +180,7 @@ def add_book(request):
     call_number = rest_utils.get_post_param(request, 'call_number')
     publisher = rest_utils.get_post_param(request, 'publisher')
     edition = rest_utils.get_post_param(request, 'edition')
-    year = request.POST.get('year') if request.POST.get('year') != 'null' else None
+    year = rest_utils.get_post_param(request, 'year')
     copies = rest_utils.get_post_param(request, 'copies')
     book_cover_url = rest_utils.get_post_param(request, 'book_cover_url')
     category_id = rest_utils.get_post_param(request, 'category_id')
@@ -215,6 +215,90 @@ def add_book(request):
     author_service.handle_authors_in_book_add(authors, book)
     return HttpResponse()
 
+
+@login_required
+@csrf_exempt
+def edit_book(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    book_id = rest_utils.get_post_param(request, 'id')
+    title = rest_utils.get_post_param(request, 'title')
+    authors = request.POST.get("authors").split(',')
+    isbn10 = rest_utils.get_post_param(request, 'isbn10')
+    isbn13 = rest_utils.get_post_param(request, 'isbn13')
+    issn = rest_utils.get_post_param(request, 'issn')
+    call_number = rest_utils.get_post_param(request, 'call_number')
+    publisher = rest_utils.get_post_param(request, 'publisher')
+    edition = rest_utils.get_post_param(request, 'edition')
+    year = rest_utils.get_post_param(request, 'year')
+    copies = rest_utils.get_post_param(request, 'copies')
+    book_cover_url = rest_utils.get_post_param(request, 'book_cover_url')
+    category_id = rest_utils.get_post_param(request, 'category_id')
+
+    if not book_id or book_id == '' or not book_id.isdigit():
+        return HttpResponseBadRequest()
+
+    book_id = int(book_id)
+
+    if not title or title == '' or not copies or copies == '':
+        return HttpResponseBadRequest()
+
+    try:
+        saved_book = Book.objects.get(id=book_id)
+        created = saved_book.created
+    except Book.DoesNotExist:
+        return HttpResponseNotFound()
+
+    if isbn10 is not None:
+        preexisting_book = book_service.get_book_by_isbn10(isbn10)
+        if preexisting_book is not None and preexisting_book.id != book_id:
+            return JsonResponse(book_serializer.get_book_add_error_serializer(preexisting_book, 'isbn10'), status=409)
+
+    if isbn13 is not None:
+        preexisting_book = book_service.get_book_by_isbn13(isbn13)
+        if preexisting_book is not None and preexisting_book.id != book_id:
+            return JsonResponse(book_serializer.get_book_add_error_serializer(preexisting_book, 'isbn13'), status=409)
+
+    if call_number is not None:
+        preexisting_book = book_service.get_book_by_call_number(call_number)
+        if preexisting_book is not None and preexisting_book.id != book_id:
+            return JsonResponse(book_serializer.get_book_add_error_serializer(preexisting_book, 'call_number'), status=409)
+
+    if category_id is not None:
+        try:
+            Genre.objects.get(id=category_id)
+        except Genre.DoesNotExist:
+            return HttpResponseNotFound()
+
+    book = Book(id=book_id, title=title, isbn10=isbn10, isbn13=isbn13, issn=issn, call_number=call_number, publisher=publisher,
+                edition=edition, year=year, copies=copies, cover=book_cover_url, genre_id=category_id, created=created)
+    book.save()
+    book.authors.clear()
+    author_service.handle_authors_in_book_add(authors, book)
+    return HttpResponse()
+
+
+@login_required
+@csrf_exempt
+def delete_book(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    book_id = rest_utils.get_post_param(request, 'id')
+    if not book_id or book_id == '' or not book_id.isdigit():
+        return HttpResponseBadRequest()
+
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return HttpResponseNotFound()
+
+    authors = book.authors.all()
+    author_service.handle_authors_in_book_delete(authors)
+
+    book.delete()
+    return HttpResponse()
 '''def addBookCover(url, book):
     bookCover = BookCover()
     save_image_from_url(BookCover.image, url)
