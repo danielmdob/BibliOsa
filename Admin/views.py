@@ -1,6 +1,7 @@
+from django.db import IntegrityError
 from pip._vendor.distro import name
 
-from SoftwareBiblio.models import Book, Author, UnregisteredUser, Administrator, Genre
+from SoftwareBiblio.models import Book, Author, UnregisteredUser, Administrator, Genre, RegisteredUser, Loan
 from SoftwareBiblio.utils import rest_utils
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
@@ -11,7 +12,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from RegisteredUser import utils
 from Admin.services import category_service, book_service, author_service
-from RegisteredUser.serializers import book_serializer
+from RegisteredUser.serializers import book_serializer, user_serializer, loan_serializer
 
 import isbnlib
 
@@ -33,6 +34,7 @@ def admin_dashboard(request):
     except Administrator.DoesNotExist:
         return HttpResponseForbidden()
 
+
 @login_required
 def admin_g_management(request):
     user = request.user
@@ -42,67 +44,6 @@ def admin_g_management(request):
         return render(request, '../templates/Admin/admin_g_management.html')
     except Administrator.DoesNotExist:
         return HttpResponseForbidden()
-
-
-def smart_add(request):
-    isbn = request.GET.get('isbn', None)
-
-    if isbnlib.notisbn(isbn):
-        data = {
-            'is_valid': False
-        }
-    else:
-        bookInfo = isbnlib.meta(isbn)  # Datos que provee meta: Title Authors Publisher Language
-        cover = isbnlib.cover(isbn)
-        bookInfo = isbnlib.meta(isbn)  # Datos que provee meta: Title Authors Publisher Language
-        try:
-            alreadyAdded = False
-            book = Book()
-            book.title = bookInfo['Title']
-            book.publisher = bookInfo['Publisher']
-            book.ISBN = isbn
-            if Book.objects.filter(ISBN=isbn).count() > 0:
-                alreadyAdded = True
-                print("repetido")
-            else:
-                book.save()
-                handle_authors(book, bookInfo['Authors'])
-
-            if cover:  # COMPLETAR
-                print("si")
-            else:
-                print("no")
-
-            data = {
-                'is_valid': True,
-                'already_added': alreadyAdded,
-                'title': bookInfo['Title'],
-                'publisher': bookInfo['Publisher'],
-                'isbn': isbn,
-            }
-        except TypeError:
-            print("Type Error")
-            data = {
-                'is_valid': False,
-                'publisher': bookInfo['Publisher']
-            }
-
-    return JsonResponse(data)
-
-
-def handle_authors(book, authors):
-    for author in authors:
-        dbAuthor = Author.objects.filter(fullName=author)
-        if dbAuthor.count() == 0:
-            newAuthor = Author()
-            newAuthor.fullName = author
-            newAuthor.save()
-            book.authors.add(newAuthor)
-            book.save()
-        else:
-            dbAuthor = Author.objects.get(fullName=author)
-            book.authors.add(dbAuthor)
-            book.save()
 
 
 @login_required
@@ -299,13 +240,87 @@ def delete_book(request):
 
     book.delete()
     return HttpResponse()
-'''def addBookCover(url, book):
-    bookCover = BookCover()
-    save_image_from_url(BookCover.image, url)
-    book.save()
 
-def save_image_from_url(field, url):
-    bookCover = BookCover()
-    bookCover.url = url
-    bookCover.save()
-    bookCover.get_remote_image()'''
+
+@login_required
+@csrf_exempt
+def subscribe_user(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    email = rest_utils.get_post_param(request, 'email')
+    first_name = rest_utils.get_post_param(request, 'first_name')
+    last_name = rest_utils.get_post_param(request, 'last_name')
+    card_number = rest_utils.get_post_param(request, 'card_number')
+
+    if (first_name is None or first_name.isspace()) or (last_name is None or last_name.isspace()) or (card_number is None or card_number.isspace()):
+        return HttpResponseBadRequest()
+
+    registered_user = RegisteredUser(email=email, first_name=first_name, last_name=last_name, card_number=card_number)
+    try:
+        registered_user.save()
+        serialized_user = user_serializer.user_serializer(registered_user)
+    except IntegrityError:
+        try:
+            conflicting_user = RegisteredUser.objects.get(card_number=card_number)
+            return JsonResponse(user_serializer.user_serializer(conflicting_user), status=409)
+        except RegisteredUser.DoesNotExist:
+            conflicting_user = RegisteredUser.objects.get(email=email)
+            return JsonResponse(user_serializer.user_serializer(conflicting_user), status=409)
+
+    return JsonResponse(serialized_user)
+
+
+@login_required
+def search_user_by_name(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    search_string = request.GET.get('search_string')
+
+    if not search_string or search_string.isspace():
+        return HttpResponseBadRequest()
+
+    found_users = RegisteredUser.objects.filter(first_name__icontains=search_string)
+    return JsonResponse(user_serializer.user_list_serializer(found_users), safe=False)
+
+
+@login_required
+@csrf_exempt
+def loan_book(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    reader_id = rest_utils.get_post_param(request, 'reader_id')
+    return_date = rest_utils.get_post_param(request, 'return_date')
+    book_id = rest_utils.get_post_param(request, 'book_id')
+
+    if (reader_id is None or reader_id.isspace() or not reader_id.isdigit()) or (return_date is None or return_date.isspace()) or (book_id is None or book_id.isspace() or not book_id.isdigit()):
+        return HttpResponseBadRequest()
+
+    try:
+        book = Book.objects.get(id=book_id)
+    except Book.DoesNotExist:
+        return HttpResponseNotFound()
+
+    if len(book.loan_set.all()) >= book.copies:
+        return HttpResponseBadRequest()
+
+    loan = Loan(reader_id=reader_id, return_date=return_date, is_active=True, book_id=book_id)
+    loan.save()
+
+    return HttpResponse()
+
+
+def get_book_loans(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    book_id = request.GET.get('book_id')
+
+    if book_id is None or book_id.isspace() or not book_id.isdigit():
+        return HttpResponseBadRequest()
+
+    loans = Loan.objects.filter(book_id=book_id, is_active=True)
+
+    return JsonResponse(loan_serializer.serialize_loans(loans), safe=False)

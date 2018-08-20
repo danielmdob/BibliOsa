@@ -25,14 +25,11 @@ class UnregisteredUser(models.Model):
 
 
 class RegisteredUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    cedula = models.CharField(max_length=20)
-    enabled = forms.BooleanField(initial=True)
-    address = models.CharField(max_length=100)
-    barcode = models.CharField(max_length=100)
-    city = models.CharField(max_length=20)
-    phone = models.CharField(max_length=20)
-    profile_picture = models.OneToOneField(ProfilePicture, on_delete=models.SET_NULL, null=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
+    first_name = models.CharField(max_length=30, null=False)
+    last_name = models.CharField(max_length=150, null=False)
+    email = models.EmailField(max_length=255, null=True, unique=True)
+    card_number = models.CharField(max_length=20, null=False, unique=True)
 
     class Meta:
         db_table = 'registered_user'
@@ -100,13 +97,11 @@ class Review(models.Model):
 
 
 class Loan(models.Model):
-    loan_date = models.DateTimeField()
+    loan_date = models.DateTimeField(auto_now_add=True, null=True)
     return_date = models.DateTimeField()
-    fee_time = models.DateTimeField()
-    fee = models.FloatField()
-    admin = models.ForeignKey(Administrator, on_delete=models.SET_NULL, null=True, related_name='admin')
-    fee_per_book = models.FloatField()
     reader = models.ForeignKey(RegisteredUser, on_delete=models.SET_NULL, null=True, related_name='reader')
+    is_active = models.BooleanField(default=True)
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'loan'

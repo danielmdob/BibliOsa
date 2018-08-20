@@ -52,55 +52,18 @@ def chose_login(request):
     email = logged_user.email
     try:
         user = User.objects.get(email=email)
+
         try:
-            admin = Administrator.objects.get(user=user)
-            return HttpResponseRedirect(web_app_url)
-        except Administrator.DoesNotExist:
-            try:
-                unregisteredUser = UnregisteredUser.objects.get(email=email)
-                try:
-                    registeredUser = RegisteredUser.objects.get(user=user)
-                    RegisteredUser.objects.filter(user=user).delete()
-                    admin = Administrator(user=registeredUser.user, cedula=registeredUser.cedula,
-                                          address=registeredUser.address, city=registeredUser.city,
-                                          phone=registeredUser.phone)
-                    admin.save()
-                    return HttpResponseRedirect(web_app_url)
-                except RegisteredUser.DoesNotExist:
-                    return HttpResponseRedirect('register')
-            except UnregisteredUser.DoesNotExist:
-                try:
-                    registeredUser = RegisteredUser.objects.get(user=user)
-                    return HttpResponseRedirect(web_app_url)
-                except RegisteredUser.DoesNotExist:
-                    return HttpResponseRedirect('register')
+            registered_user = RegisteredUser.objects.get(email=email)
+            if registered_user.user_id is None:
+                registered_user.user_id = user.id
+                registered_user.save()
+        except RegisteredUser.DoesNotExist:
+            pass
+
+        return HttpResponseRedirect(web_app_url)
     except User.DoesNotExist:
         return HttpResponseRedirect('register')
-
-
-# register a new user
-def finish_register(request):
-    cedula = request.GET.get('cedula', None)
-    email = request.GET.get('email', None)
-    address = request.GET.get('address', None)
-    city = request.GET.get('city', None)
-    phone = request.GET.get('phone', None)
-    # print("%s %s %s %s %s %s" % (fullname, cedula, email, address, city, phone))
-    # hacer el registro a la base de datos
-    try:
-        user = UnregisteredUser.objects.get(email=email)
-        dashboard = 1  # admin dashboard
-        admin = Administrator(user=User.objects.get(email=email), cedula=cedula, address=address,
-                              city=city, phone=phone)
-        admin.save()
-    except UnregisteredUser.DoesNotExist:
-        dashboard = 0  # reader dashboard
-        registered_user = RegisteredUser(user=User.objects.get(email=email), cedula=cedula,
-                                         address=address, city=city,
-                                         phone=phone)
-        registered_user.save()
-    data = {'dashboard': dashboard}
-    return HttpResponse(status=200)
 
 
 def is_logged_in(request):
@@ -112,6 +75,7 @@ def is_logged_in(request):
 
 def redirect_to_app(request):
     return HttpResponseRedirect(web_app_url)
+
 
 @login_required
 def reader_about(request):
@@ -171,11 +135,22 @@ def is_administrator(request):
 @login_required
 def get_user_info(request):
     user = request.user
-    user_info = {
-        'email' : user.email,
-        'firstName' : user.first_name,
-        'lastName' : user.last_name,
-    }
+    try:
+        registered_user = RegisteredUser.objects.get(email=user.email)
+        user_info = {
+            'email': registered_user.email,
+            'firstName': registered_user.first_name,
+            'lastName': registered_user.last_name,
+            'isSubscribed': 'true',
+        }
+    except RegisteredUser.DoesNotExist:
+        user_info = {
+            'email': user.email,
+            'firstName': user.first_name,
+            'lastName': user.last_name,
+            'isSubscribed': False,
+        }
+
     return JsonResponse(user_info)
 
 
