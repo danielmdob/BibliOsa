@@ -1,12 +1,11 @@
-from django.contrib.auth.models import User
-
-from SoftwareBiblio.models import Administrator
+from SoftwareBiblio.models import Administrator, RegisteredUser
 
 
 def is_admin(email):
     try:
-        admin = Administrator.objects.get(user=User.objects.get(email=email))
+        user = RegisteredUser.objects.get(email=email)
+        admin = Administrator.objects.get(registereduser_ptr_id=user.id)
         return True
-    except Administrator.DoesNotExist:
+    except RegisteredUser.DoesNotExist or Administrator.DoesNotExist:
         return False
 

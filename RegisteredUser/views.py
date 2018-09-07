@@ -213,6 +213,16 @@ def title_search_book(request):
     return JsonResponse(book_serializer.search_serializer(found_books), safe=False)
 
 
+def call_number_search_book(request):
+    search_string = request.GET.get('search_string')
+
+    if not search_string or search_string == '':
+        return HttpResponseBadRequest()
+
+    found_books = Book.objects.filter(call_number__istartswith=search_string)
+    return JsonResponse(book_serializer.search_serializer(found_books), safe=False)
+
+
 def author_search(request):
     search_string = request.GET.get('search_string')
 

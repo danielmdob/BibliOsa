@@ -5,8 +5,7 @@ from SoftwareBiblio.models import RegisteredUser
 
 def get_user_by_email(email):
     try:
-        user = User.objects.get(email=email)
-        registered_user = RegisteredUser.objects.get(user=user)
+        registered_user = RegisteredUser.objects.get(email=email)
         return registered_user
-    except User.DoesNotExist or RegisteredUser.DoesNotExist:
+    except RegisteredUser.DoesNotExist:
         return None

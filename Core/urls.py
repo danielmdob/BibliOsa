@@ -39,10 +39,11 @@ urlpatterns = [
     # web services
     url(r'^is_logged_in', ruviews.is_logged_in, name='is_logged_in'),
     url(r'^is_administrator', ruviews.is_administrator, name='is_administrator'),
-    url(r'^get_user_info', ruviews.get_user_info, name='get_user_info'),
+    url(r'^get_user_info$', ruviews.get_user_info, name='get_user_info'),
     url(r'^get_categories', ruviews.get_categories, name='get_categories'),
     url(r'^get_book$', ruviews.get_book_info, name='get_book'),
     url(r'^title_search_book', ruviews.title_search_book, name='title_search_book'),
+    url(r'^call_number_search_book', ruviews.call_number_search_book, name='call_number_search_book'),
     url(r'^get_author', ruviews.get_author_info, name='get_author'),
     url(r'^author_search', ruviews.author_search, name='author_search'),
     url(r'^new_arrivals', ruviews.get_new_arrivals, name='new_arrivals'),
@@ -57,8 +58,14 @@ urlpatterns = [
     url(r'^delete_book', aviews.delete_book, name='delete_book'),
     url(r'^subscribe_user', aviews.subscribe_user, name='subscribe_user'),
     url(r'^user_search_first_name', aviews.search_user_by_name, name='user_search_first_name'),
+    url(r'^user_search_last_name', aviews.search_user_by_last_name, name='user_search_last_name'),
+    url(r'^user_search_card_number', aviews.search_user_by_card_number, name='user_search_card_number'),
     url(r'^make_loan', aviews.loan_book, name='make_loan'),
     url(r'^get_book_loans', aviews.get_book_loans, name='get_loans_book'),
+    url(r'^get_active_loans', aviews.get_active_loans, name='get_active_loans'),
+    url(r'^return_book', aviews.return_book, name='return_book'),
+    url(r'^get_user_info_id$', aviews.get_user_info_id, name='get_user_info_id'),
+    url(r'^edit_other_user', aviews.edit_other_user, name='edit_other_user'),
 ]
 
 #if settings.DEBUG: # settings to make static and media files work

@@ -286,6 +286,33 @@ def search_user_by_name(request):
 
 
 @login_required
+def search_user_by_last_name(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    search_string = request.GET.get('search_string')
+
+    if not search_string or search_string.isspace():
+        return HttpResponseBadRequest()
+
+    found_users = RegisteredUser.objects.filter(last_name__icontains=search_string)
+    return JsonResponse(user_serializer.user_list_serializer(found_users), safe=False)
+
+@login_required
+def search_user_by_card_number(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    search_string = request.GET.get('search_string')
+
+    if not search_string or search_string.isspace():
+        return HttpResponseBadRequest()
+
+    found_users = RegisteredUser.objects.filter(card_number__istartswith=search_string)
+    return JsonResponse(user_serializer.user_list_serializer(found_users), safe=False)
+
+
+@login_required
 @csrf_exempt
 def loan_book(request):
     if not utils.validate_admin(request.user):
@@ -312,6 +339,7 @@ def loan_book(request):
     return HttpResponse()
 
 
+@login_required
 def get_book_loans(request):
     if not utils.validate_admin(request.user):
         return HttpResponseForbidden()
@@ -324,3 +352,78 @@ def get_book_loans(request):
     loans = Loan.objects.filter(book_id=book_id, is_active=True)
 
     return JsonResponse(loan_serializer.serialize_loans(loans), safe=False)
+
+
+@login_required
+def get_active_loans(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    loans = Loan.objects.filter(is_active=True)
+
+    return JsonResponse(loan_serializer.serialize_loans(loans), safe=False)
+
+
+@login_required
+@csrf_exempt
+def return_book(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    loan_id = rest_utils.get_post_param(request, 'id')
+
+    if loan_id is None or loan_id.isspace() or not loan_id.isdigit():
+        return HttpResponseBadRequest()
+
+    try:
+        loan = Loan.objects.get(id=loan_id)
+        loan.is_active = False
+        loan.save()
+    except Loan.DoesNotExist:
+        return HttpResponseNotFound()
+
+    return HttpResponse()
+
+
+@login_required
+def get_user_info_id(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    user_id = request.GET.get('id')
+
+    if user_id is None or user_id.isspace() or not user_id.isdigit():
+        return HttpResponseBadRequest()
+
+    try:
+        user = RegisteredUser.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return HttpResponseNotFound()
+
+    return JsonResponse(user_serializer.user_serializer(user))
+
+
+@login_required
+@csrf_exempt
+def edit_other_user(request):
+    if not utils.validate_admin(request.user):
+        return HttpResponseForbidden()
+
+    user_id = rest_utils.get_post_param(request, 'id')
+    first_name = rest_utils.get_post_param(request, 'first_name')
+    last_name = rest_utils.get_post_param(request, 'last_name')
+    card_number = rest_utils.get_post_param(request, 'card_number')
+
+    if (user_id is None or user_id.isspace() or not user_id.isdigit()) or (first_name is None or first_name.isspace()) or (last_name is None or last_name.isspace()) or (card_number is None or card_number.isspace()):
+        return HttpResponseBadRequest()
+
+    try:
+        user = RegisteredUser.objects.get(id=user_id)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.card_number = card_number
+        user.save()
+    except User.DoesNotExist:
+        return HttpResponseNotFound()
+
+    return HttpResponse()
